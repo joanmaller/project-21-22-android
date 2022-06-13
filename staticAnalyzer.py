@@ -41,7 +41,8 @@ import ssdeep
 import settings
 
 # global variables
-CC = ''.join(map(unichr, range(0, 32) + range(127, 160)))
+#CC = ''.join(map(unichr, range(0, 32) + range(127, 160)))
+CC = ''.join(map(chr, list(range(0, 32)) + list(range(127, 160))))
 
 
 #########################################################################################
@@ -156,7 +157,7 @@ def getActivities(sampleFile):
                                 stdout=subprocess.PIPE,
                                 stdin=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
-    manifest = manifest.communicate(0)[0].split("\n")
+    manifest = manifest.communicate(0)[0].decode().split("\n")
     for line in manifest:
         if "activity" in line:
             try:
@@ -176,7 +177,7 @@ def getActivities(sampleFile):
         stdout=subprocess.PIPE,
         stdin=subprocess.PIPE,
         stderr=subprocess.PIPE)
-    manifest = manifest.communicate(0)[0].split("\n")
+    manifest = manifest.communicate(0)[0].decode().split("\n")
     for i, line in enumerate(manifest):
         if "activity" in line:
             try:
@@ -207,7 +208,7 @@ def getIntents(logFile, sampleFile):
         stdout=subprocess.PIPE,
         stdin=subprocess.PIPE,
         stderr=subprocess.PIPE)
-    xml = xml.communicate(0)[0].split("\n")
+    xml = xml.communicate(0)[0].decode().split("\n")
     i = 0
     for line in xml:
         if "intent" in line:
@@ -234,7 +235,7 @@ def getPermissions(logFile, sampleFile):
         stderr=subprocess.PIPE)
     # print 'into permissions'
     # print permissions.communicate(0)
-    permissions = permissions.communicate(0)[0].split("uses-permission: ")
+    permissions = permissions.communicate(0)[0].decode().split("uses-permission: ")
     log(logFile, 0, "granted permissions", 0)
     i = 1
     while i < len(permissions):
@@ -257,7 +258,7 @@ def getProviders(logFile, sampleFile):
         stdout=subprocess.PIPE,
         stdin=subprocess.PIPE,
         stderr=subprocess.PIPE)
-    xml = xml.communicate(0)[0].split("\n")
+    xml = xml.communicate(0)[0].decode().split("\n")
     for line in xml:
         if "provider" in line:
             try:
@@ -282,7 +283,7 @@ def getServicesReceivers(logFile, sampleFile):
         stdout=subprocess.PIPE,
         stdin=subprocess.PIPE,
         stderr=subprocess.PIPE)
-    manifest = manifest.communicate(0)[0].split("\n")
+    manifest = manifest.communicate(0)[0].decode().split("\n")
     for i, line in enumerate(manifest):
         if "service" in line:
             try:
@@ -688,6 +689,8 @@ def createOutput(workingDir, sampleFile, appProviders, appPermissions,
 
 
 def report_to_feature_vector(report):
+    
+    output = dict()
 
     def key_fmt(k, val):
         return '{}::{}'.format(k, val.strip()).replace('.', '_')
