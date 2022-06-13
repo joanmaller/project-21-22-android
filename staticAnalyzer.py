@@ -41,6 +41,7 @@ import ssdeep
 import settings
 
 from pathlib import Path
+import shutil
 
 # global variables
 #CC = ''.join(map(unichr, range(0, 32) + range(127, 160)))
@@ -648,6 +649,10 @@ def parseSmaliURL(logFile, smaliLocation):
 # unpack the sample apk-file
 def unpackSample(tmpDir, sampleFile):
     unpackLocation = tmpDir + "unpack"
+    
+    if os.path.exists(unpackLocation):
+        shutil.rmtree(unpackLocation)
+
     os.mkdir(unpackLocation)
     os.system("unzip " + "-o -q -d " + unpackLocation + " " + sampleFile)
     return unpackLocation
