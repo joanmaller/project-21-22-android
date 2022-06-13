@@ -40,6 +40,8 @@ import ssdeep
 
 import settings
 
+from pathlib import Path
+
 # global variables
 #CC = ''.join(map(unichr, range(0, 32) + range(127, 160)))
 CC = ''.join(map(chr, list(range(0, 32)) + list(range(127, 160))))
@@ -673,7 +675,8 @@ def createOutput(workingDir, sampleFile, appProviders, appPermissions,
     if not os.path.exists(os.path.join(workingDir, 'results')):
         os.mkdir(os.path.join(workingDir, 'results'))
 
-    sha = sampleFile.split(".")[0]
+    sha = Path(sampleFile).stem
+
     run_id = '{}drebin-{}@{}'.format(sha, str(uuid.uuid4())[:6],
                                      datetime.datetime.utcnow().strftime(
                                          '%Y-%m-%dT%H:%M:%SZ'))
