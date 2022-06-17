@@ -28,6 +28,8 @@ if __name__ == '__main__':
     file.close()
 
     output = list()
+    data = []
+    labels = []
 
     for f in os.listdir(results_dir):
 
@@ -46,10 +48,33 @@ if __name__ == '__main__':
             else:
                 tmp_vect.append(0)
 
+        i =  label_file(apk_name)
         data_sample = {"Y": label_file(apk_name), "X": tmp_vect}
         output.append(data_sample)
+        
+        data.append(tmp_vect)
+        if "good" in i:
+            labels.append(1)
+        elif "mal" in i:
+            labels.append(0)
+  
 
     output_file = open(filename, "w")
     json.dump(output, output_file)
     output_file.close()
     print("[I]\tDone! Wrote results to", filename)
+
+    
+    output_file = open("data_X.json", "w")
+    json.dump(data, output_file)
+    output_file.close()
+    print("[I]\tDone! Wrote data to", "data_X.json")
+  
+    output_file = open("labels_y.json", "w")
+    json.dump(labels, output_file)
+    output_file.close()
+    print("[I]\tDone! Wrote labels to", "labels_y.json")
+
+
+
+
