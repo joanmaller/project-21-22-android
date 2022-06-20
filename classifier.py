@@ -50,7 +50,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 
 model = Sequential()
-model.add(Dense(500, input_dim=3868, activation='relu'))
+model.add(Dense(500,  activation='relu'))
 model.add(Dense(270, activation='relu'))
 model.add(Dense(8, activation='relu'))
 model.add(Dense(1, activation='sigmoid'))
