@@ -18,11 +18,12 @@ input_file.close()
 
 X = np.array(data)
 y = np.array(labels)
+
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 from sklearn.svm import LinearSVC 
-clf = LinearSVC(C=0.7, class_weight=None, dual=False, fit_intercept=True,
-          intercept_scaling=1, loss='squared_hinge', max_iter=1000,
+clf = LinearSVC(C=0.8, class_weight=None, dual=True, fit_intercept=True,
+          intercept_scaling=1, loss='squared_hinge', max_iter=2000,
           multi_class='ovr', penalty='l2', random_state=None, tol=0.001,
           verbose=0)
 clf.fit(X_train, y_train)
@@ -48,23 +49,26 @@ print(confusion_matrix(y_test, y_pred2))
 #We try with Neural Network
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
+from tensorflow.keras import regularizers
+
+#, kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)
+n_features = np.shape(data)[1]
 
 model = Sequential()
-model.add(Dense(500,  activation='relu'))
-model.add(Dense(270, activation='relu'))
-model.add(Dense(8, activation='relu'))
-model.add(Dense(1, activation='sigmoid'))
-model.compile(optimizer='adam',loss='binary_crossentropy', metrics=['accuracy'])
+model.add(Dense(700,  activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
+model.add(Dense(400, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
+model.add(Dense(12, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
+model.add(Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
+model.compile(optimizer='adam',loss='binary_crossentropy', metrics=['accuracy', 'AUC'])
 
 #We set a 10% Validation set
 X_train,X_val,y_train,y_val = train_test_split(np.array(data),np.array(labels),test_size = 0.1)
 history = model.fit(X_train,y_train,
               batch_size=10,
-              epochs=50,
+              epochs=100,
               validation_data=(X_val, y_val),
               shuffle=True)
-
-
+#Plot AUC
 plt.plot(history.history['accuracy'])
 plt.plot(history.history['val_accuracy'])
 plt.title('Model accuracy')
@@ -73,10 +77,29 @@ plt.xlabel('Epoch')
 plt.legend(['Train', 'Validation'], loc='lower right')
 plt.show()
 
-#y_pred = model.predict_classes(X_ts) # Before tensorflow 2.6
+#Plot AUC
+plt.plot(history.history['auc'])
+plt.plot(history.history['val_auc'])
+plt.title('Model auc')
+plt.ylabel('AUC (Area under Curve)')
+plt.xlabel('Epoch')
+plt.legend(['Train', 'Validation'], loc='lower right')
+plt.show()
+
+
+# Plot history: Loss
+plt.plot(history.history['loss'], label='Training data')
+plt.plot(history.history['val_loss'], label='Validation data')
+plt.title('L1/L2 Activity Loss')
+plt.ylabel('Loss value')
+plt.xlabel('No. epoch')
+plt.legend(loc="upper left")
+plt.show()
+
 scr = model.predict(X_test) # We extract the score for each class ...
 y_pred3 = np.rint(scr)     # ... and then we round it to the nearest integer
 acc3='CNN Accuracy: %.2f %%' % (accuracy_score(y_test, y_pred3)*100)
 print(acc3)
 score = model.evaluate(X_test, y_test, batch_size=250)
 print(score)
+print(confusion_matrix(y_test, y_pred3))
