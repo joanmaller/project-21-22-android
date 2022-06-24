@@ -4,6 +4,9 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+import settings
+import joblib
+
 
 data = []
 labels = []
@@ -36,6 +39,15 @@ print(acc)
 from sklearn.metrics import confusion_matrix
 print(confusion_matrix(y_test, y_pred))
 
+if not os.path.exists(settings.MODELS):
+    os.mkdir(settings.MODELS)
+
+joblib.dump(clf, settings.SVM_MODEL_PATH)
+print("[I]\tSVM model saved to", settings.SVM_MODEL_PATH)
+
+
+
+
 #Now we test with a KNeighborsClassifier 
 from sklearn.neighbors import KNeighborsClassifier
 clf2 = KNeighborsClassifier(n_neighbors=1)
@@ -45,6 +57,12 @@ y_pred2 = clf2.predict(X_test)
 acc2 = 'KNN Accuracy: %.2f %%' % (accuracy_score(y_test, y_pred2)*100)
 print(acc2)
 print(confusion_matrix(y_test, y_pred2))
+
+joblib.dump(clf2, settings.KNN_MODEL_PATH)
+print("[I]\tKNN model saved to", settings.KNN_MODEL_PATH)
+
+
+
 
 #We try with Neural Network
 from tensorflow.keras.models import Sequential
@@ -103,3 +121,8 @@ print(acc3)
 score = model.evaluate(X_test, y_test, batch_size=250)
 print(score)
 print(confusion_matrix(y_test, y_pred3))
+
+
+model.save(settings.DNN_MODEL_PATH)
+print("[I]\tDNN model saved to", settings.DNN_MODEL_PATH)
+

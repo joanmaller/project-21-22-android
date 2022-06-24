@@ -33,7 +33,15 @@
 #AAPT = "aapt"
 #AAPT = "/usr/local/bin/aapt"
 
-AAPT = "/usr/bin/aapt"  # location of the aapt binary
+#AAPT = "/usr/bin/aapt"  # location of the aapt binary
+AAPT = "./aapt"  # location of the aapt binary
 APICALLS = "APIcalls.txt"
 BACKSMALI = "baksmali-2.0.3.jar"  # location of the baksmali.jar file
 MODELS = "models/"
+
+GOOD_APK_DIR = "../apk/good/"
+BAD_APK_DIR = "../apk/bad/"
+
+SVM_MODEL_PATH = MODELS+"svm"
+KNN_MODEL_PATH = MODELS+"knn"
+DNN_MODEL_PATH = MODELS+"dnn"
