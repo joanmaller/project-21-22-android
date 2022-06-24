@@ -66,8 +66,11 @@ print("[I]\tKNN model saved to", settings.KNN_MODEL_PATH)
 
 #We try with Neural Network
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense , Dropout
 from tensorflow.keras import regularizers
+from tensorFlow.keras.callbacks import ReduceLROnPlateau
+from tensorFlow.keras.utils.vis_utils import plot_model
+
 
 #, kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)
 n_features = np.shape(data)[1]
