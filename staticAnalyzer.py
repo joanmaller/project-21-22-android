@@ -787,3 +787,16 @@ def run(sampleFile, workingDir):
     # programm and log footer
     # print "close log-file..."
     closeLogFile(logFile)
+    
+    output = dict()
+    output['app_permissions'] = appPermissions
+    output['api_permissions'] = apiPermissions
+    output['api_calls'] = apiCalls
+    output['intents'] = appIntents
+    output['activities'] = appActivities
+    output['s_and_r'] = servicesANDreceiver
+    output['interesting_calls'] = dangerousCalls
+    output['urls'] = appUrls
+    output['providers'] = appProviders
+
+    return output
