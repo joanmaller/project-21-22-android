@@ -74,18 +74,31 @@ n_features = np.shape(data)[1]
 
 model = Sequential()
 model.add(Dense(700,  activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
+model.add(Dropout(0.1))
 model.add(Dense(400, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
+model.add(Dropout(0.2))
 model.add(Dense(12, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
+model.add(Dropout(0.2))
 model.add(Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
 model.compile(optimizer='adam',loss='binary_crossentropy', metrics=['accuracy', 'AUC'])
+model.summary()
+#plot CNN model
+
+plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
+
+#reduce
+learning_rate_reduction = ReduceLROnPlateau(monitor='val_accuracy', patience = 2, verbose=1,factor=0.3, min_lr=0.000001)
 
 #We set a 10% Validation set
 X_train,X_val,y_train,y_val = train_test_split(np.array(data),np.array(labels),test_size = 0.1)
+
 history = model.fit(X_train,y_train,
               batch_size=10,
               epochs=100,
               validation_data=(X_val, y_val),
               shuffle=True)
+
+
 #Plot AUC
 plt.plot(history.history['accuracy'])
 plt.plot(history.history['val_accuracy'])
