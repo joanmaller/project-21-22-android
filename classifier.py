@@ -68,8 +68,8 @@ print("[I]\tKNN model saved to", settings.KNN_MODEL_PATH)
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense , Dropout
 from tensorflow.keras import regularizers
-from tensorFlow.keras.callbacks import ReduceLROnPlateau
-from tensorFlow.keras.utils.vis_utils import plot_model
+from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.utils.vis_utils import plot_model
 
 
 #, kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)
@@ -84,10 +84,12 @@ model.add(Dense(12, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=
 model.add(Dropout(0.2))
 model.add(Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
 model.compile(optimizer='adam',loss='binary_crossentropy', metrics=['accuracy', 'AUC'])
-model.summary()
+#model.summary() check what's the issue 
+
+
 #plot CNN model
 
-plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
+#plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
 
 #reduce
 learning_rate_reduction = ReduceLROnPlateau(monitor='val_accuracy', patience = 2, verbose=1,factor=0.3, min_lr=0.000001)
