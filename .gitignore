@@ -1,7 +1,6 @@
 
 static.log
 unpack/
-results/
 
 __pycache__/
 *.swp
