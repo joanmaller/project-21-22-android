@@ -69,7 +69,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense , Dropout
 from tensorflow.keras import regularizers
 from tensorflow.keras.callbacks import ReduceLROnPlateau
-#from tensorflow.keras.utils.vis_utils import plot_model
+#from tensorflow.keras.utils import plot_model
 
 
 #, kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)
