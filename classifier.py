@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import settings
 import joblib
+import keras
+from keras.utils.vis_utils import plot_model
+
 
 
 data = []
@@ -84,12 +87,12 @@ model.add(Dense(12, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=
 model.add(Dropout(0.2))
 model.add(Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
 model.compile(optimizer='adam',loss='binary_crossentropy', metrics=['accuracy', 'AUC'])
-#model.summary() check what's the issue 
+#model.summary() # check what's the issue 
 
 
 #plot CNN model
 
-#plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
+#plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)  #test if the new import is working
 
 #reduce
 #learning_rate_reduction = ReduceLROnPlateau(monitor='val_accuracy', patience = 2, verbose=1,factor=0.3, min_lr=0.000001)
