@@ -799,4 +799,4 @@ def run(sampleFile, workingDir):
     output['urls'] = appUrls
     output['providers'] = appProviders
 
-    return output
+    return report_to_feature_vector(output)

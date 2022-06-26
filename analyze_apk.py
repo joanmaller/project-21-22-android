@@ -5,7 +5,7 @@ import joblib
 import settings
 import numpy as np
 from staticAnalyzer import run
-
+from tensorflow.keras.models import load_model
 
 feature_file = "known_features.json"
 
@@ -16,7 +16,7 @@ if len(sys.argv) != 2 or not sys.argv[1].endswith("apk"):
     sys.exit()
 
 print("[I]\tExctracting features from APK...")
-apk_features = run(sampleFile=sys.argv[1], workingDir=".")
+apk_features = run(sampleFile=sys.argv[1], workingDir=".").keys()
 
 
 known_features = set()
@@ -36,6 +36,15 @@ for known_f in known_features:
 X = np.array(data).reshape(1, -1)
 
 svm_clf = joblib.load(settings.SVM_MODEL_PATH)
-pred = svm_clf.predict(X)
+svm_pred = svm_clf.predict(X)
+print(svm_pred)
 
-print(pred)
+
+knn_clf = joblib.load(settings.KNN_MODEL_PATH)
+knn_pred = knn_clf.predict(X)
+print(knn_pred)
+
+
+dnn_clf = load_model(settings.DNN_MODEL_PATH)
+dnn_pred = dnn_clf.predict(X)
+print(dnn_pred)
