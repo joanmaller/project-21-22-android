@@ -69,7 +69,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense , Dropout
 from tensorflow.keras import regularizers
 from tensorflow.keras.callbacks import ReduceLROnPlateau
-from tensorflow.keras.utils.vis_utils import plot_model
+#from tensorflow.keras.utils.vis_utils import plot_model
 
 
 #, kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)
@@ -92,7 +92,7 @@ model.compile(optimizer='adam',loss='binary_crossentropy', metrics=['accuracy', 
 #plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
 
 #reduce
-learning_rate_reduction = ReduceLROnPlateau(monitor='val_accuracy', patience = 2, verbose=1,factor=0.3, min_lr=0.000001)
+#learning_rate_reduction = ReduceLROnPlateau(monitor='val_accuracy', patience = 2, verbose=1,factor=0.3, min_lr=0.000001)
 
 #We set a 10% Validation set
 X_train,X_val,y_train,y_val = train_test_split(np.array(data),np.array(labels),test_size = 0.1)
