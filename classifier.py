@@ -29,7 +29,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 from sklearn.svm import LinearSVC 
 clf = LinearSVC(C=0.8, class_weight=None, dual=True, fit_intercept=True,
-          intercept_scaling=1, loss='squared_hinge', max_iter=2000,
+          intercept_scaling=1, loss='squared_hinge', max_iter=10000,
           multi_class='ovr', penalty='l2', random_state=None, tol=0.001,
           verbose=0)
 clf.fit(X_train, y_train)
@@ -53,7 +53,8 @@ print("[I]\tSVM model saved to", settings.SVM_MODEL_PATH)
 
 #Now we test with a KNeighborsClassifier 
 from sklearn.neighbors import KNeighborsClassifier
-clf2 = KNeighborsClassifier(n_neighbors=1)
+clf2 = KNeighborsClassifier(n_neighbors=5, weights='distance',
+        algorithm='auto', leaf_size=100000)
 clf2.fit(X_train, y_train)
 y_pred2 = clf2.predict(X_test)
 
@@ -101,8 +102,8 @@ model.compile(optimizer='adam',loss='binary_crossentropy', metrics=['accuracy', 
 X_train,X_val,y_train,y_val = train_test_split(np.array(data),np.array(labels),test_size = 0.1)
 
 history = model.fit(X_train,y_train,
-              batch_size=10,
-              epochs=100,
+              batch_size=500,
+              epochs=50,
               validation_data=(X_val, y_val),
               shuffle=True)
 
