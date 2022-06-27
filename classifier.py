@@ -49,6 +49,8 @@ joblib.dump(clf, settings.SVM_MODEL_PATH)
 print("[I]\tSVM model saved to", settings.SVM_MODEL_PATH)
 
 # --- try evaluation with secml ---
+# snippet based on tutorial from:
+# https://github.com/pralab/secml/blob/master/tutorials/13-Android-Malware-Detection.ipynb
 
 from secml.ml.classifiers import CClassifierSVM
 from secml.ml.peval.metrics import CMetricTPRatFPR, CMetricF1, CRoc
@@ -60,9 +62,15 @@ from secml.data import CDataset
 secml_clf = CClassifierSVM(C=0.1)
 secml_clf.fit(X_train, y_train)
 
-secml_pred, pred_score = secml_clf.predict(X_test, return_decision_function=True)
+ts = CDataset(x=X_test, y=y_test)
+
+secml_pred, score_pred = secml_clf.predict(X_test, return_decision_function=True)
 secml_acc = 'SecML SVC Accuracy: %.2f %%' % (accuracy_score(y_test, secml_pred.get_data())*100)
 print(secml_acc)
+
+fpr_th = 0.02  # 2% False Positive Rate
+dr = CMetricTPRatFPR(fpr=fpr_th).performance_score(y_true=ts.Y, score=score_pred[:, 1].ravel())
+print("Detection rate @ 2% FPR: {:.2%}".format(dr))
 
 params = {
     "classifier": secml_clf,
@@ -75,14 +83,12 @@ params = {
     "solver_params": {'eta': 1, 'eta_min': 1, 'eta_max': None, 'eps': 1e-4}
 }
 
-ts = CDataset(x=X_test, y=y_test)
-
 evasion = CAttackEvasionPGDLS(**params)
 n_mal = 10
 
 # Attack DS
 mal_idx = ts.Y.find(ts.Y == 1)[:n_mal]
-adv_ds = [mal_idx]
+adv_ds = ts[mal_idx, :]
 
 # Security evaluation parameters
 param_name = 'dmax'  # This is the `eps` parameter
