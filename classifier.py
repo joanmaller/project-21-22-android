@@ -48,6 +48,60 @@ if not os.path.exists(settings.MODELS):
 joblib.dump(clf, settings.SVM_MODEL_PATH)
 print("[I]\tSVM model saved to", settings.SVM_MODEL_PATH)
 
+# --- try evaluation with secml ---
+
+from secml.ml.classifiers import CClassifierSVM
+from secml.ml.peval.metrics import CMetricTPRatFPR, CMetricF1, CRoc
+from secml.array import CArray
+from secml.adv.attacks.evasion import CAttackEvasionPGDLS
+from secml.adv.seceval import CSecEval
+from secml.data import CDataset
+
+secml_clf = CClassifierSVM(C=0.1)
+secml_clf.fit(X_train, y_train)
+
+secml_pred, pred_score = secml_clf.predict(X_test, return_decision_function=True)
+secml_acc = 'SecML SVC Accuracy: %.2f %%' % (accuracy_score(y_test, secml_pred.get_data())*100)
+print(secml_acc)
+
+params = {
+    "classifier": secml_clf,
+    "distance": 'l2',
+    "double_init": False,
+    "lb": 'x0',
+    "ub": 1,
+    "attack_classes": 'all',
+    "y_target": 0,
+    "solver_params": {'eta': 1, 'eta_min': 1, 'eta_max': None, 'eps': 1e-4}
+}
+
+ts = CDataset(x=X_test, y=y_test)
+
+evasion = CAttackEvasionPGDLS(**params)
+n_mal = 10
+
+# Attack DS
+mal_idx = ts.Y.find(ts.Y == 1)[:n_mal]
+adv_ds = [mal_idx]
+
+# Security evaluation parameters
+param_name = 'dmax'  # This is the `eps` parameter
+dmax_start = 0
+dmax = 28
+dmax_step = 4
+
+param_values = CArray.arange(
+    start=dmax_start, step=dmax_step, stop=dmax + dmax_step)
+
+sec_eval = CSecEval(
+    attack=evasion,
+    param_name=param_name,
+    param_values=param_values)
+
+print("Running security evaluation...")
+sec_eval.run_sec_eval(adv_ds)
+print("Security evaluation completed!")
+
 
 
 
