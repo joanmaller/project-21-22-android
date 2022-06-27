@@ -27,8 +27,8 @@ file.close()
 
 data = list()
 
-for known_f in known_features:
-    if known_f in apk_features:
+for known_f in sorted(known_features):
+    if known_f in sorted(apk_features):
         data.append(1)
     else:
         data.append(0)
