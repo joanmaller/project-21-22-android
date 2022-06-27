@@ -74,20 +74,25 @@ from tensorflow.keras.layers import Dense , Dropout
 from tensorflow.keras import regularizers
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 #from tensorflow.keras.utils import plot_model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers.schedules import ExponentialDecay
 
+lr_schedule = ExponentialDecay(
+        initial_learning_rate = 0.001,
+        decay_steps = 1000,
+        decay_rate = 0.25)
+
+opt = Adam(learning_rate=lr_schedule)
 
 #, kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)
 n_features = np.shape(data)[1]
 
 model = Sequential()
-model.add(Dense(700,  activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
-model.add(Dropout(0.1))
-model.add(Dense(400, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
-model.add(Dropout(0.2))
-model.add(Dense(12, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
-model.add(Dropout(0.2))
+model.add(Dense(n_features,  activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
+model.add(Dense(n_features/10, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
+model.add(Dense(n_features/100, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
 model.add(Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
-model.compile(optimizer='adam',loss='binary_crossentropy', metrics=['accuracy', 'AUC'])
+model.compile(optimizer=opt,loss='binary_crossentropy', metrics=['accuracy', 'AUC'])
 #model.summary() # check what's the issue 
 
 
@@ -95,15 +100,12 @@ model.compile(optimizer='adam',loss='binary_crossentropy', metrics=['accuracy', 
 
 #plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)  #test if the new import is working
 
-#reduce
-#learning_rate_reduction = ReduceLROnPlateau(monitor='val_accuracy', patience = 2, verbose=1,factor=0.3, min_lr=0.000001)
-
 #We set a 10% Validation set
 X_train,X_val,y_train,y_val = train_test_split(np.array(data),np.array(labels),test_size = 0.1)
 
 history = model.fit(X_train,y_train,
-              batch_size=500,
-              epochs=50,
+              batch_size=50,
+              epochs=25,
               validation_data=(X_val, y_val),
               shuffle=True)
 
