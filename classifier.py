@@ -62,6 +62,9 @@ from secml.data import CDataset
 secml_clf = CClassifierSVM(C=0.1)
 secml_clf.fit(X_train, y_train)
 
+joblib.dump(secml_clf, settings.SECML_MODEL_PATH)
+print("[I]\tSecML SVM model saved to", settings.SECML_MODEL_PATH)
+
 ts = CDataset(x=X_test, y=y_test)
 
 secml_pred, score_pred = secml_clf.predict(X_test, return_decision_function=True)
@@ -84,7 +87,7 @@ params = {
 }
 
 evasion = CAttackEvasionPGDLS(**params)
-n_mal = 10
+n_mal = 100
 
 # Attack DS
 mal_idx = ts.Y.find(ts.Y == 1)[:n_mal]

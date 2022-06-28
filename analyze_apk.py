@@ -6,6 +6,12 @@ import settings
 import numpy as np
 from staticAnalyzer import run
 from tensorflow.keras.models import load_model
+from secml.ml.classifiers import CClassifierSVM
+from secml.array import CArray
+from secml.explanation import CExplainerGradientInput
+from secml.data import CDataset
+
+
 
 feature_file = "known_features.json"
 
@@ -48,3 +54,16 @@ print(knn_pred)
 dnn_clf = load_model(settings.DNN_MODEL_PATH)
 dnn_pred = dnn_clf.predict(X)
 print(dnn_pred)
+
+
+secml_clf = joblib.load(settings.SECML_MODEL_PATH)
+attr = CExplainerGradientInput(secml_clf).explain(x=CArray(data), y=svm_pred[0])
+attr = attr / attr.norm(order=1)
+
+attr_argsort = abs(attr).argsort().ravel()[::-1]
+
+n_plot = 10
+
+for i in attr_argsort[:10]:
+    print(attr[i].item()*100, "\t", sorted(known_features)[i])
+
