@@ -240,7 +240,7 @@ for i,t in enumerate(th):
 #Plot FAR vs GAR, the ROC curve
 
 fig, ax = plt.subplots()
-ax.plot(FAR, FRR)
+ax.plot(100 - FAR, FRR)
 ax.set(xlabel='FAR(%)', ylabel='GAR(%)',
        title='Percentage of FAR and FRR varying threshold')
 plt.show()
