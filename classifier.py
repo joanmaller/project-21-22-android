@@ -7,10 +7,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, auc, confusion_matrix, roc_curve
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import LinearSVC 
+import cv2
 import settings
 import joblib
 import keras
-from keras.utils.vis_utils import plot_model
+#from keras.utils.vis_utils import plot_model
 
 
 
@@ -30,10 +31,8 @@ y = np.array(labels)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
-clf = LinearSVC(C=0.8, class_weight=None, dual=True, fit_intercept=True,
-          intercept_scaling=1, loss='squared_hinge', max_iter=10000,
-          multi_class='ovr', penalty='l2', random_state=None, tol=0.001,
-          verbose=0)
+clf = LinearSVC(C=0.1, loss='squared_hinge', max_iter=10000,
+          multi_class='ovr', penalty='l2', tol=0.00001, verbose=0)
 clf.fit(X_train, y_train)
 
 y_pred = clf.predict(X_test)
@@ -115,8 +114,8 @@ print("Security evaluation completed!")
 
 
 #Now we test with a KNeighborsClassifier 
-clf2 = KNeighborsClassifier(n_neighbors=5, weights='distance',
-        algorithm='auto', leaf_size=100000)
+clf2 = KNeighborsClassifier(n_neighbors=5, weights='uniform',
+        algorithm='auto')
 clf2.fit(X_train, y_train)
 y_pred2 = clf2.predict(X_test)
 
@@ -137,7 +136,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense , Dropout
 from tensorflow.keras import regularizers
 from tensorflow.keras.callbacks import ReduceLROnPlateau
-#from tensorflow.keras.utils import plot_model
+from tensorflow.keras.utils import plot_model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.optimizers.schedules import ExponentialDecay
 
@@ -151,16 +150,15 @@ opt = Adam(learning_rate=lr_schedule)
 n_features = np.shape(data)[1]
 
 model = Sequential()
-model.add(Dense(n_features,  activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
-model.add(Dense(n_features/10, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
-model.add(Dense(n_features/100, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
+model.add(Dense(n_features*0.5,  activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
+#model.add(Dropout(0.1))
+model.add(Dense(n_features/15, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
+#model.add(Dropout(0.1))
+model.add(Dense(n_features/150, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
+#model.add(Dropout(0.1))
 model.add(Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
 model.compile(optimizer=opt,loss='binary_crossentropy', metrics=['accuracy', 'AUC'])
 
-
-#plot CNN model
-
-#plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)  #test if the new import is working
 
 #We set a 10% Validation set
 X_train,X_val,y_train,y_val = train_test_split(np.array(data),np.array(labels),test_size = 0.1)
@@ -171,7 +169,13 @@ history = model.fit(X_train,y_train,
               validation_data=(X_val, y_val),
               shuffle=True)
 
+
+
+#plot CNN model
 model.summary() # check what's the issue 
+plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)  #test if the new import is working
+img = cv2.imread('model_plot_png')
+cv2.imshow(img)
 
 #Plot Accuracy history
 plt.plot(history.history['accuracy'])
@@ -205,7 +209,7 @@ scr = model.predict(X_test) # We extract the score for each class ...
 y_pred3 = np.rint(scr)     # ... and then we round it to the nearest integer
 acc3='CNN Accuracy: %.2f %%' % (accuracy_score(y_test, y_pred3)*100)
 print(acc3)
-score = model.evaluate(X_test, y_test, batch_size=250)
+score = model.evaluate(X_test, y_test, batch_size=50)
 print(score)
 print(confusion_matrix(y_test, y_pred3))
 fpr_cnn, tpr_cnn, thresholds_cnn = roc_curve(y_test, y_pred3)
@@ -213,6 +217,7 @@ auc_cnn = auc(fpr_cnn, tpr_cnn)
 
 plt.figure(1)
 plt.plot([0, 1], [0, 1], 'k--')
+#plt.plot([0, 1], [0, 1], color="navy", lw=lw, linestyle="--")
 plt.plot(fpr_svm, tpr_svm, label='SVM (area = {:.3f})'.format(auc_svm))
 plt.plot(fpr_knn, tpr_knn, label='KNN (area = {:.3f})'.format(auc_knn))
 plt.plot(fpr_cnn, tpr_cnn, label='CNN (area = {:.3f})'.format(auc_cnn))
