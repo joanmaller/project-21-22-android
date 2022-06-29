@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, auc, confusion_matrix, roc_curve
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import LinearSVC 
 import settings
 import joblib
 import keras
@@ -28,7 +30,6 @@ y = np.array(labels)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
-from sklearn.svm import LinearSVC 
 clf = LinearSVC(C=0.8, class_weight=None, dual=True, fit_intercept=True,
           intercept_scaling=1, loss='squared_hinge', max_iter=10000,
           multi_class='ovr', penalty='l2', random_state=None, tol=0.001,
@@ -36,10 +37,11 @@ clf = LinearSVC(C=0.8, class_weight=None, dual=True, fit_intercept=True,
 clf.fit(X_train, y_train)
 
 y_pred = clf.predict(X_test)
-from sklearn.metrics import accuracy_score
 acc='Liner SVC Accuracy: %.2f %%' % (accuracy_score(y_test, y_pred)*100)
 print(acc)
 print(confusion_matrix(y_test, y_pred))
+fpr_svm, tpr_svm, thresholds_svm = roc_curve(y_test, y_pred)
+auc_svm = auc(fpr_svm, tpr_svm)
 
 if not os.path.exists(settings.MODELS):
     os.mkdir(settings.MODELS)
@@ -112,9 +114,7 @@ print("Security evaluation completed!")
 
 
 
-
 #Now we test with a KNeighborsClassifier 
-from sklearn.neighbors import KNeighborsClassifier
 clf2 = KNeighborsClassifier(n_neighbors=5, weights='distance',
         algorithm='auto', leaf_size=100000)
 clf2.fit(X_train, y_train)
@@ -123,6 +123,8 @@ y_pred2 = clf2.predict(X_test)
 acc2 = 'KNN Accuracy: %.2f %%' % (accuracy_score(y_test, y_pred2)*100)
 print(acc2)
 print(confusion_matrix(y_test, y_pred2))
+fpr_knn, tpr_knn, thresholds_knn = roc_curve(y_test, y_pred2)
+auc_knn = auc(fpr_knn, tpr_knn)
 
 joblib.dump(clf2, settings.KNN_MODEL_PATH)
 print("[I]\tKNN model saved to", settings.KNN_MODEL_PATH)
@@ -146,7 +148,6 @@ lr_schedule = ExponentialDecay(
 
 opt = Adam(learning_rate=lr_schedule)
 
-#, kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)
 n_features = np.shape(data)[1]
 
 model = Sequential()
@@ -155,7 +156,6 @@ model.add(Dense(n_features/10, activation='relu', kernel_regularizer=regularizer
 model.add(Dense(n_features/100, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
 model.add(Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
 model.compile(optimizer=opt,loss='binary_crossentropy', metrics=['accuracy', 'AUC'])
-#model.summary() # check what's the issue 
 
 
 #plot CNN model
@@ -171,6 +171,7 @@ history = model.fit(X_train,y_train,
               validation_data=(X_val, y_val),
               shuffle=True)
 
+model.summary() # check what's the issue 
 
 #Plot Accuracy history
 plt.plot(history.history['accuracy'])
@@ -207,40 +208,18 @@ print(acc3)
 score = model.evaluate(X_test, y_test, batch_size=250)
 print(score)
 print(confusion_matrix(y_test, y_pred3))
+fpr_cnn, tpr_cnn, thresholds_cnn = roc_curve(y_test, y_pred3)
+auc_cnn = auc(fpr_cnn, tpr_cnn)
 
-
-#We separate the score for goodware and malware
-goodware = scr[y_pred3==0]
-malware = scr[y_pred3==1]
-
-#scores normalization in range [0,1]
-mx = max(np.concatenate((goodware,malware),axis=0))
-mn = min(np.concatenate((goodware,malware),axis=0))
-goodware = (goodware - mn)/(mx-mn)
-malware = (malware - mn)/(mx-mn)
-
-#False Rejection Rate
-FRR=np.zeros((100,1))
-#False Acceptance Rate
-FAR=np.zeros((100,1))
-
-#We set a 100 points threshold, from 0 (all apps classified as goodware) to 1 (as malware).
-#P.S. We can do this because now the match scores are normalized.
-th=np.linspace(0,1,100); 
-for i,t in enumerate(th):
-
-  count=len(np.argwhere(malware>=t))  
-  FAR[i,0]=count/len(malware)*100  
-
-  count=len(np.argwhere(goodware<t))  
-  FRR[i,0]=count/len(goodware)*100         
-
-
-#Plot FAR vs GAR, the ROC curve
-fig, ax = plt.subplots()
-ax.plot(100 - FAR, FRR)
-ax.set(xlabel='FAR(%)', ylabel='GAR(%)',
-       title='Percentage of FAR and FRR varying threshold')
+plt.figure(1)
+plt.plot([0, 1], [0, 1], 'k--')
+plt.plot(fpr_svm, tpr_svm, label='SVM (area = {:.3f})'.format(auc_svm))
+plt.plot(fpr_knn, tpr_knn, label='KNN (area = {:.3f})'.format(auc_knn))
+plt.plot(fpr_cnn, tpr_cnn, label='CNN (area = {:.3f})'.format(auc_cnn))
+plt.xlabel('False positive rate')
+plt.ylabel('True positive rate')
+plt.title('ROC curve')
+plt.legend(loc='best')
 plt.show()
 
 model.save(settings.DNN_MODEL_PATH)
