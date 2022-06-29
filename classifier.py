@@ -173,7 +173,7 @@ history = model.fit(X_train,y_train,
               shuffle=True)
 
 
-#Plot AUC
+#Plot Accuracy history
 plt.plot(history.history['accuracy'])
 plt.plot(history.history['val_accuracy'])
 plt.title('Model accuracy')
@@ -182,7 +182,7 @@ plt.xlabel('Epoch')
 plt.legend(['Train', 'Validation'], loc='lower right')
 plt.show()
 
-#Plot AUC
+#Plot AUC history
 plt.plot(history.history['auc'])
 plt.plot(history.history['val_auc'])
 plt.title('Model auc')
@@ -192,7 +192,7 @@ plt.legend(['Train', 'Validation'], loc='lower right')
 plt.show()
 
 
-# Plot history: Loss
+# Plot Loss history
 plt.plot(history.history['loss'], label='Training data')
 plt.plot(history.history['val_loss'], label='Validation data')
 plt.title('L1/L2 Activity Loss')
@@ -210,6 +210,43 @@ print(score)
 print(confusion_matrix(y_test, y_pred3))
 
 
+#We separate the score for goodware and malware
+goodware = scr[y_pred3==0]
+malware = scr[y_pred3==1]
+
+#scores normalization in range [0,1]
+mx = max(np.concatenate((goodware,malware),axis=0))
+mn = min(np.concatenate((goodware,malware),axis=0))
+goodware = (goodware - mn)/(mx-mn)
+malware = (malware - mn)/(mx-mn)
+
+#False Rejection Rate
+FRR=np.zeros((100,1))
+#False Acceptance Rate
+FAR=np.zeros((100,1))
+
+#We set a 100 points threshold, from 0 (all apps classified as goodware) to 1 (as malware).
+#P.S. We can do this because now the match scores are normalized.
+th=np.linspace(0,1,100); 
+for i,t in enumerate(th):
+
+  count=len(np.argwhere(malware>=t))  
+  FAR[i,0]=count/len(malware)*100  
+
+  count=len(np.argwhere(goodware<t))  
+  FRR[i,0]=count/len(goodware)*100         
+
+
+#Plot FAR vs GAR, the ROC curve
+
+fig, ax = plt.subplots()
+ax.plot(FAR, FRR)
+ax.set(xlabel='FAR(%)', ylabel='GAR(%)',
+       title='Percentage of FAR and FRR varying threshold')
+plt.show()
+
 model.save(settings.DNN_MODEL_PATH)
-print("[I]\tDNN model saved to", settings.DNN_MODEL_PATH)
+print("[I]\tCNN model saved to", settings.DNN_MODEL_PATH)
+
+
 

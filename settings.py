@@ -42,6 +42,8 @@ MODELS = "models/"
 GOOD_APK_DIR = "../apk/good/"
 BAD_APK_DIR = "../apk/bad/"
 
+SECML_MODEL_PATH = MODELS+"secml"
+
 SVM_MODEL_PATH = MODELS+"svm"
 KNN_MODEL_PATH = MODELS+"knn"
 DNN_MODEL_PATH = MODELS+"dnn"
