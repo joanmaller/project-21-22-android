@@ -4,6 +4,7 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, auc, confusion_matrix, roc_curve
 import settings
 import joblib
 import keras
@@ -38,8 +39,6 @@ y_pred = clf.predict(X_test)
 from sklearn.metrics import accuracy_score
 acc='Liner SVC Accuracy: %.2f %%' % (accuracy_score(y_test, y_pred)*100)
 print(acc)
-
-from sklearn.metrics import confusion_matrix
 print(confusion_matrix(y_test, y_pred))
 
 if not os.path.exists(settings.MODELS):
@@ -198,7 +197,7 @@ plt.plot(history.history['val_loss'], label='Validation data')
 plt.title('L1/L2 Activity Loss')
 plt.ylabel('Loss value')
 plt.xlabel('No. epoch')
-plt.legend(loc="upper left")
+plt.legend(loc="lower right")
 plt.show()
 
 scr = model.predict(X_test) # We extract the score for each class ...
@@ -238,7 +237,6 @@ for i,t in enumerate(th):
 
 
 #Plot FAR vs GAR, the ROC curve
-
 fig, ax = plt.subplots()
 ax.plot(100 - FAR, FRR)
 ax.set(xlabel='FAR(%)', ylabel='GAR(%)',
