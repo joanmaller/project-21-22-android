@@ -58,6 +58,9 @@ from secml.array import CArray
 from secml.adv.attacks.evasion import CAttackEvasionPGDLS
 from secml.adv.seceval import CSecEval
 from secml.data import CDataset
+from secml.figure import CFigure
+from secml.ml.peval.metrics import CMetricTHatFPR, CMetricTPRatTH
+
 
 secml_clf = CClassifierSVM(C=0.1)
 secml_clf.fit(X_train, y_train)
@@ -70,10 +73,7 @@ ts = CDataset(x=X_test, y=y_test)
 secml_pred, score_pred = secml_clf.predict(X_test, return_decision_function=True)
 secml_acc = 'SecML SVC Accuracy: %.2f %%' % (accuracy_score(y_test, secml_pred.get_data())*100)
 print(secml_acc)
-
-fpr_th = 0.02  # 2% False Positive Rate
-dr = CMetricTPRatFPR(fpr=fpr_th).performance_score(y_true=ts.Y, score=score_pred[:, 1].ravel())
-print("Detection rate @ 2% FPR: {:.2%}".format(dr))
+print(confusion_matrix(y_test, secml_pred.get_data()))
 
 params = {
     "classifier": secml_clf,
@@ -87,7 +87,7 @@ params = {
 }
 
 evasion = CAttackEvasionPGDLS(**params)
-n_mal = 100
+n_mal = 10
 
 # Attack DS
 mal_idx = ts.Y.find(ts.Y == 1)[:n_mal]
@@ -96,8 +96,8 @@ adv_ds = ts[mal_idx, :]
 # Security evaluation parameters
 param_name = 'dmax'  # This is the `eps` parameter
 dmax_start = 0
-dmax = 28
-dmax_step = 4
+dmax = 30
+dmax_step = 1
 
 param_values = CArray.arange(
     start=dmax_start, step=dmax_step, stop=dmax + dmax_step)
@@ -110,6 +110,12 @@ sec_eval = CSecEval(
 print("Running security evaluation...")
 sec_eval.run_sec_eval(adv_ds)
 print("Security evaluation completed!")
+
+fig = CFigure(height=5, width=5)
+fig.sp.plot_sec_eval(sec_eval.sec_eval_data, marker='o',
+        label='SVM', show_average=True)
+
+fig.show()
 
 
 
