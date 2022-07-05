@@ -4,7 +4,7 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, auc, confusion_matrix, roc_curve
+from sklearn.metrics import accuracy_score, auc, confusion_matrix, roc_curve, ConfusionMatrixDisplay
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import LinearSVC 
 #import cv2
@@ -12,7 +12,6 @@ import settings
 import joblib
 #import keras
 #from keras.utils.vis_utils import plot_model
-
 
 
 data = []
@@ -38,7 +37,7 @@ clf.fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 acc='Liner SVC Accuracy: %.2f %%' % (accuracy_score(y_test, y_pred)*100)
 print(acc)
-print(confusion_matrix(y_test, y_pred))
+cm_svm = confusion_matrix(y_test, y_pred)
 fpr_svm, tpr_svm, thresholds_svm = roc_curve(y_test, y_pred)
 auc_svm = auc(fpr_svm, tpr_svm)
 
@@ -47,6 +46,11 @@ if not os.path.exists(settings.MODELS):
 
 joblib.dump(clf, settings.SVM_MODEL_PATH)
 print("[I]\tSVM model saved to", settings.SVM_MODEL_PATH)
+
+disp_cm_svm = ConfusionMatrixDisplay(confusion_matrix=cm_svm, display_labels=["goodware", "malware"])
+disp_cm_svm.plot()
+plt.show()
+
 
 # --- try evaluation with secml ---
 # snippet based on tutorial from:
@@ -73,7 +77,12 @@ ts = CDataset(x=X_test, y=y_test)
 secml_pred, score_pred = secml_clf.predict(X_test, return_decision_function=True)
 secml_acc = 'SecML SVC Accuracy: %.2f %%' % (accuracy_score(y_test, secml_pred.get_data())*100)
 print(secml_acc)
-print(confusion_matrix(y_test, secml_pred.get_data()))
+cm_secml = confusion_matrix(y_test, secml_pred.get_data())
+
+disp_cm_secml = ConfusionMatrixDisplay(confusion_matrix=cm_secml, display_labels=["goodware", "malware"])
+disp_cm_secml.plot()
+plt.show()
+
 
 params = {
     "classifier": secml_clf,
@@ -127,14 +136,16 @@ y_pred2 = clf2.predict(X_test)
 
 acc2 = 'KNN Accuracy: %.2f %%' % (accuracy_score(y_test, y_pred2)*100)
 print(acc2)
-print(confusion_matrix(y_test, y_pred2))
+cm_knn = confusion_matrix(y_test, y_pred2)
 fpr_knn, tpr_knn, thresholds_knn = roc_curve(y_test, y_pred2)
 auc_knn = auc(fpr_knn, tpr_knn)
 
 joblib.dump(clf2, settings.KNN_MODEL_PATH)
 print("[I]\tKNN model saved to", settings.KNN_MODEL_PATH)
 
-
+disp_cm_knn = ConfusionMatrixDisplay(confusion_matrix=cm_knn, display_labels=["goodware", "malware"])
+disp_cm_knn.plot()
+plt.show()
 
 
 #We try with Neural Network
@@ -217,7 +228,7 @@ acc3='CNN Accuracy: %.2f %%' % (accuracy_score(y_test, y_pred3)*100)
 print(acc3)
 score = model.evaluate(X_test, y_test, batch_size=50)
 print(score)
-print(confusion_matrix(y_test, y_pred3))
+cm_cnn = confusion_matrix(y_test, y_pred3)
 fpr_cnn, tpr_cnn, thresholds_cnn = roc_curve(y_test, y_pred3)
 auc_cnn = auc(fpr_cnn, tpr_cnn)
 
@@ -236,5 +247,8 @@ plt.show()
 model.save(settings.DNN_MODEL_PATH)
 print("[I]\tCNN model saved to", settings.DNN_MODEL_PATH)
 
+disp_cm_cnn = ConfusionMatrixDisplay(confusion_matrix=cm_cnn, display_labels=["goodware", "malware"])
+disp_cm_cnn.plot()
+plt.show()
 
 
