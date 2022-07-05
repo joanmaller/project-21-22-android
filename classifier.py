@@ -7,10 +7,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, auc, confusion_matrix, roc_curve
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import LinearSVC 
-import cv2
+#import cv2
 import settings
 import joblib
-import keras
+#import keras
 #from keras.utils.vis_utils import plot_model
 
 
@@ -29,7 +29,7 @@ input_file.close()
 X = np.array(data)
 y = np.array(labels)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1776)
 
 clf = LinearSVC(C=0.1, loss='squared_hinge', max_iter=10000,
           multi_class='ovr', penalty='l2', tol=0.00001, verbose=0)
@@ -147,9 +147,9 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.optimizers.schedules import ExponentialDecay
 
 lr_schedule = ExponentialDecay(
-        initial_learning_rate = 0.001,
-        decay_steps = 1000,
-        decay_rate = 0.25)
+        initial_learning_rate = 0.01,
+        decay_steps = 50,
+        decay_rate = 0.5)
 
 opt = Adam(learning_rate=lr_schedule)
 
@@ -167,21 +167,21 @@ model.compile(optimizer=opt,loss='binary_crossentropy', metrics=['accuracy', 'AU
 
 
 #We set a 10% Validation set
-X_train,X_val,y_train,y_val = train_test_split(np.array(data),np.array(labels),test_size = 0.1)
+#X_train,X_val,y_train,y_val = train_test_split(np.array(data),np.array(labels),test_size = 0.1)
 
 history = model.fit(X_train,y_train,
               batch_size=50,
-              epochs=25,
-              validation_data=(X_val, y_val),
+              epochs=20,
+              validation_data=(X_test, y_test),
               shuffle=True)
 
 
 
 #plot CNN model
 model.summary() # check what's the issue 
-plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)  #test if the new import is working
-img = cv2.imread('model_plot_png')
-cv2.imshow(img)
+#plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)  #test if the new import is working
+#img = cv2.imread('model_plot_png')
+#cv2.imshow(img)
 
 #Plot Accuracy history
 plt.plot(history.history['accuracy'])
