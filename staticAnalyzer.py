@@ -36,7 +36,7 @@ import ujson as json
 import uuid
 import glob
 
-import ssdeep
+#import ssdeep
 
 import settings
 
