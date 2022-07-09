@@ -64,9 +64,10 @@ from secml.adv.seceval import CSecEval
 from secml.data import CDataset
 from secml.figure import CFigure
 from secml.ml.peval.metrics import CMetricTHatFPR, CMetricTPRatTH
+from secml.ml.kernels import CKernelLinear
 
 
-secml_clf = CClassifierSVM(C=0.1)
+secml_clf = CClassifierSVM(C=0.1, kernel=CKernelLinear())
 secml_clf.fit(X_train, y_train)
 
 joblib.dump(secml_clf, settings.SECML_MODEL_PATH)
@@ -125,6 +126,35 @@ fig.sp.plot_sec_eval(sec_eval.sec_eval_data, marker='o',
         label='SVM', show_average=True)
 
 fig.show()
+
+# --- Try dataset poisoning ---
+from secml.adv.attacks.poisoning import CAttackPoisoningSVM
+
+tr = CDataset(x=X_train, y=y_train)
+solver_params = {'eta': 1, 'eta_min': 1, 'eta_max': None, 'eps': 1e-4}
+
+
+svm_poisoning = CAttackPoisoningSVM(
+        classifier=secml_clf,
+        distance='l2',
+        training_data=tr,
+        val=ts,
+        lb=0,
+        ub=1,
+        solver_params = solver_params,
+        y_target=0)
+
+svm_poisoning.x0 = tr[0,:].X #attacker's initial sample features
+svm_poisoning.xc = tr[0,:].X #attacker's sample features
+svm_poisoning.yc = tr[0,:].Y #attacker's sample label
+
+svm_poisoning.n_points = 50 #number of poisoned points
+
+print("[I]\tPoisoning started...")
+pois_y_pred, pois_scores, _, _ = svm_poisoning.run(ts.X, ts.Y)
+print("[I]\tDone!")
+pois_acc='Poisoned SVC Accuracy: %.2f %%' % (accuracy_score(y_test, pois_y_pred.get_data())*100)
+print(pois_acc)
 
 
 
