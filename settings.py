@@ -39,6 +39,13 @@ APICALLS = "APIcalls.txt"
 BACKSMALI = "baksmali-2.0.3.jar"  # location of the baksmali.jar file
 MODELS = "models/"
 
+RESULTS = "results/"
+KNOWN_FEATURES = "known_features.json"
+
+X_DATA = "data_X.json"
+Y_LABELS = "labels_y.json"
+
+
 GOOD_APK_DIR = "../apk/good/"
 BAD_APK_DIR = "../apk/bad/"
 

@@ -16,7 +16,7 @@ def text_pred(num):
     return "malware" if num == 1 else "goodware"
 
 
-feature_file = "known_features.json"
+#settings.KNOWN_FEATURES = "known_features.json"
 
 #usage: python analyze_apk.py path_to_apk
 
@@ -29,7 +29,7 @@ apk_features = run(sampleFile=sys.argv[1], workingDir=".").keys()
 
 
 known_features = set()
-file = open(feature_file, "r")
+file = open(settings.KNOWN_FEATURES, "r")
 known_features.update(json.load(file))
 file.close()
 
@@ -37,7 +37,7 @@ file.close()
 data = list()
 
 for known_f in sorted(known_features):
-    if known_f in sorted(apk_features):
+    if known_f in apk_features:
         data.append(1)
     else:
         data.append(0)
