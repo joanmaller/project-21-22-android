@@ -1,18 +1,24 @@
 import os
 import sys
 import json
+import settings
+import joblib
+
 import numpy as np
+
 import matplotlib.pyplot as plt
+
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, auc, confusion_matrix, roc_curve, ConfusionMatrixDisplay
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import LinearSVC 
-#import cv2
-import settings
-import joblib
-#import keras
-#from keras.utils.vis_utils import plot_model
 
+from secml.ml.classifiers import CClassifierSVM
+from secml.ml.kernels import CKernelLinear
+
+
+if not os.path.exists(settings.MODELS):
+    os.mkdir(settings.MODELS)
 
 data = []
 labels = []
@@ -33,9 +39,14 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 print("\nTrainining samples:", y_train.size,
         "\nTesting samples:", y_test.size)
 
+
+
 clf = LinearSVC(C=0.1, loss='squared_hinge', max_iter=10000,
           multi_class='ovr', penalty='l2', tol=0.00001, verbose=0)
 clf.fit(X_train, y_train)
+
+joblib.dump(clf, settings.SVM_MODEL_PATH)
+print("[I]\tSVM model saved to", settings.SVM_MODEL_PATH)
 
 y_pred = clf.predict(X_test)
 y_pred_score = clf.decision_function(X_test)
@@ -47,30 +58,6 @@ cm_svm = confusion_matrix(y_test, y_pred)
 fpr_svm, tpr_svm, thresholds_svm = roc_curve(y_test, y_pred_score)
 auc_svm = auc(fpr_svm, tpr_svm)
 
-if not os.path.exists(settings.MODELS):
-    os.mkdir(settings.MODELS)
-
-joblib.dump(clf, settings.SVM_MODEL_PATH)
-print("[I]\tSVM model saved to", settings.SVM_MODEL_PATH)
-
-disp_cm_svm = ConfusionMatrixDisplay(confusion_matrix=cm_svm, display_labels=["goodware", "malware"])
-disp_cm_svm.plot()
-plt.show()
-
-
-# --- try evaluation with secml ---
-# snippet based on tutorial from:
-# https://github.com/pralab/secml/blob/master/tutorials/13-Android-Malware-Detection.ipynb
-
-from secml.ml.classifiers import CClassifierSVM
-from secml.ml.peval.metrics import CMetricTPRatFPR, CMetricF1, CRoc
-from secml.array import CArray
-from secml.adv.attacks.evasion import CAttackEvasionPGDLS
-from secml.adv.seceval import CSecEval
-from secml.data import CDataset
-from secml.figure import CFigure
-from secml.ml.peval.metrics import CMetricTHatFPR, CMetricTPRatTH
-from secml.ml.kernels import CKernelLinear
 
 
 secml_clf = CClassifierSVM(C=0.1, kernel=CKernelLinear())
@@ -79,93 +66,11 @@ secml_clf.fit(X_train, y_train)
 joblib.dump(secml_clf, settings.SECML_MODEL_PATH)
 print("[I]\tSecML SVM model saved to", settings.SECML_MODEL_PATH)
 
-ts = CDataset(x=X_test, y=y_test)
 
 secml_pred, score_pred = secml_clf.predict(X_test, return_decision_function=True)
 secml_acc = 'SecML SVC Accuracy: %.2f %%' % (accuracy_score(y_test, secml_pred.get_data())*100)
 print(secml_acc)
 cm_secml = confusion_matrix(y_test, secml_pred.get_data())
-
-disp_cm_secml = ConfusionMatrixDisplay(confusion_matrix=cm_secml, display_labels=["goodware", "malware"])
-disp_cm_secml.plot()
-plt.show()
-
-
-params = {
-    "classifier": secml_clf,
-    "distance": 'l2',
-    "double_init": False,
-    "lb": 'x0',
-    "ub": 1,
-    "attack_classes": 'all',
-    "y_target": 0,
-    "solver_params": {'eta': 1, 'eta_min': 1, 'eta_max': None, 'eps': 1e-4}
-}
-
-evasion = CAttackEvasionPGDLS(**params)
-n_mal = 10
-
-# Attack DS
-mal_idx = ts.Y.find(ts.Y == 1)[:n_mal]
-adv_ds = ts[mal_idx, :]
-
-# Security evaluation parameters
-param_name = 'dmax'  # This is the `eps` parameter
-dmax_start = 0
-dmax = 5
-dmax_step = 1
-
-param_values = CArray.arange(
-    start=dmax_start, step=dmax_step, stop=dmax + dmax_step)
-
-sec_eval = CSecEval(
-    attack=evasion,
-    param_name=param_name,
-    param_values=param_values)
-
-print("Running security evaluation...")
-sec_eval.run_sec_eval(adv_ds)
-print("Security evaluation completed!")
-
-fig = CFigure(height=5, width=5)
-fig.sp.plot_sec_eval(sec_eval.sec_eval_data, marker='o',
-        label='SVM', show_average=True)
-
-fig.show()
-
-# --- Try dataset poisoning ---
-from secml.adv.attacks.poisoning import CAttackPoisoningSVM
-
-tr = CDataset(x=X_train, y=y_train)
-solver_params = {'eta': 1, 'eta_min': 1, 'eta_max': None, 'eps': 1e-4}
-
-
-svm_poisoning = CAttackPoisoningSVM(
-        classifier=secml_clf,
-        distance='l2',
-        training_data=tr,
-        val=ts,
-        lb=0,
-        ub=1,
-        solver_params = solver_params,
-        y_target=0)
-
-svm_poisoning.x0 = tr[0,:].X #attacker's initial sample features
-svm_poisoning.xc = tr[0,:].X #attacker's sample features
-svm_poisoning.yc = tr[0,:].Y #attacker's sample label
-
-svm_poisoning.n_points = 150 #number of poisoned points
-
-print("[I]\tPoisoning started...")
-pois_y_pred, pois_scores, _, _ = svm_poisoning.run(ts.X, ts.Y)
-print("[I]\tDone!")
-pois_acc='Poisoned SVC Accuracy: %.2f %%' % (accuracy_score(y_test, pois_y_pred.get_data())*100)
-print(pois_acc)
-
-cm_pois = confusion_matrix(y_test, pois_y_pred.get_data())
-disp_cm_pois = ConfusionMatrixDisplay(confusion_matrix=cm_pois, display_labels=["goodware", "malware"])
-disp_cm_pois.plot()
-plt.show()
 
 
 
@@ -174,6 +79,10 @@ plt.show()
 clf2 = KNeighborsClassifier(n_neighbors=5, weights='uniform',
         algorithm='auto')
 clf2.fit(X_train, y_train)
+
+joblib.dump(clf2, settings.KNN_MODEL_PATH)
+print("[I]\tKNN model saved to", settings.KNN_MODEL_PATH)
+
 y_pred2 = clf2.predict(X_test)
 y_pred2_score = np.array(clf2.predict_proba(X_test))[:,1]
 
@@ -183,12 +92,7 @@ cm_knn = confusion_matrix(y_test, y_pred2)
 fpr_knn, tpr_knn, thresholds_knn = roc_curve(y_test, y_pred2_score)
 auc_knn = auc(fpr_knn, tpr_knn)
 
-joblib.dump(clf2, settings.KNN_MODEL_PATH)
-print("[I]\tKNN model saved to", settings.KNN_MODEL_PATH)
 
-disp_cm_knn = ConfusionMatrixDisplay(confusion_matrix=cm_knn, display_labels=["goodware", "malware"])
-disp_cm_knn.plot()
-plt.show()
 
 
 #We try with Neural Network
@@ -230,9 +134,12 @@ history = model.fit(X_train,y_train,
               shuffle=True)
 
 
+model.save(settings.DNN_MODEL_PATH)
+print("[I]\tCNN model saved to", settings.DNN_MODEL_PATH)
+
 
 #plot CNN model
-model.summary() # check what's the issue 
+#model.summary() # check what's the issue 
 #plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)  #test if the new import is working
 #img = cv2.imread('model_plot_png')
 #cv2.imshow(img)
@@ -289,11 +196,24 @@ plt.show()
 
 
 
-model.save(settings.DNN_MODEL_PATH)
-print("[I]\tCNN model saved to", settings.DNN_MODEL_PATH)
+disp_cm_svm = ConfusionMatrixDisplay(confusion_matrix=cm_svm, display_labels=["goodware", "malware"])
+disp_cm_svm.plot()
+plt.title('SVM Confusion Matrix')
+plt.show()
+
+disp_cm_secml = ConfusionMatrixDisplay(confusion_matrix=cm_secml, display_labels=["goodware", "malware"])
+disp_cm_secml.plot()
+plt.title('SecML SVM Confusion Matrix')
+plt.show()
+
+disp_cm_knn = ConfusionMatrixDisplay(confusion_matrix=cm_knn, display_labels=["goodware", "malware"])
+disp_cm_knn.plot()
+plt.title('KNN Confusion Matrix')
+plt.show()
 
 disp_cm_cnn = ConfusionMatrixDisplay(confusion_matrix=cm_cnn, display_labels=["goodware", "malware"])
 disp_cm_cnn.plot()
+plt.title('DNN Confusion Matrix')
 plt.show()
 
 
