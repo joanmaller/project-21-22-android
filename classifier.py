@@ -30,6 +30,9 @@ y = np.array(labels)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1776)
 
+print("\nTrainining samples:", y_train.size,
+        "\nTesting samples:", y_test.size)
+
 clf = LinearSVC(C=0.1, loss='squared_hinge', max_iter=10000,
           multi_class='ovr', penalty='l2', tol=0.00001, verbose=0)
 clf.fit(X_train, y_train)
@@ -109,7 +112,7 @@ adv_ds = ts[mal_idx, :]
 # Security evaluation parameters
 param_name = 'dmax'  # This is the `eps` parameter
 dmax_start = 0
-dmax = 30
+dmax = 5
 dmax_step = 1
 
 param_values = CArray.arange(
@@ -151,13 +154,19 @@ svm_poisoning.x0 = tr[0,:].X #attacker's initial sample features
 svm_poisoning.xc = tr[0,:].X #attacker's sample features
 svm_poisoning.yc = tr[0,:].Y #attacker's sample label
 
-svm_poisoning.n_points = 50 #number of poisoned points
+svm_poisoning.n_points = 150 #number of poisoned points
 
 print("[I]\tPoisoning started...")
 pois_y_pred, pois_scores, _, _ = svm_poisoning.run(ts.X, ts.Y)
 print("[I]\tDone!")
 pois_acc='Poisoned SVC Accuracy: %.2f %%' % (accuracy_score(y_test, pois_y_pred.get_data())*100)
 print(pois_acc)
+
+cm_pois = confusion_matrix(y_test, pois_y_pred.get_data())
+disp_cm_pois = ConfusionMatrixDisplay(confusion_matrix=cm_pois, display_labels=["goodware", "malware"])
+disp_cm_pois.plot()
+plt.show()
+
 
 
 

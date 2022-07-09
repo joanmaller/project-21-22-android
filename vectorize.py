@@ -42,7 +42,7 @@ if __name__ == '__main__':
         tmp_vect = list()
 
         for known_f in sorted(known_features):
-            if known_f in sorted(features):
+            if known_f in features:
                 tmp_vect.append(1)
             else:
                 tmp_vect.append(0)
