@@ -35,10 +35,13 @@ clf = LinearSVC(C=0.1, loss='squared_hinge', max_iter=10000,
 clf.fit(X_train, y_train)
 
 y_pred = clf.predict(X_test)
+y_pred_score = clf.decision_function(X_test)
+
 acc='Liner SVC Accuracy: %.2f %%' % (accuracy_score(y_test, y_pred)*100)
 print(acc)
 cm_svm = confusion_matrix(y_test, y_pred)
-fpr_svm, tpr_svm, thresholds_svm = roc_curve(y_test, y_pred)
+
+fpr_svm, tpr_svm, thresholds_svm = roc_curve(y_test, y_pred_score)
 auc_svm = auc(fpr_svm, tpr_svm)
 
 if not os.path.exists(settings.MODELS):
@@ -163,11 +166,12 @@ clf2 = KNeighborsClassifier(n_neighbors=5, weights='uniform',
         algorithm='auto')
 clf2.fit(X_train, y_train)
 y_pred2 = clf2.predict(X_test)
+y_pred2_score = np.array(clf2.predict_proba(X_test))[:,1]
 
 acc2 = 'KNN Accuracy: %.2f %%' % (accuracy_score(y_test, y_pred2)*100)
 print(acc2)
 cm_knn = confusion_matrix(y_test, y_pred2)
-fpr_knn, tpr_knn, thresholds_knn = roc_curve(y_test, y_pred2)
+fpr_knn, tpr_knn, thresholds_knn = roc_curve(y_test, y_pred2_score)
 auc_knn = auc(fpr_knn, tpr_knn)
 
 joblib.dump(clf2, settings.KNN_MODEL_PATH)
@@ -212,7 +216,7 @@ model.compile(optimizer=opt,loss='binary_crossentropy', metrics=['accuracy', 'AU
 
 history = model.fit(X_train,y_train,
               batch_size=50,
-              epochs=20,
+              epochs=10,
               validation_data=(X_test, y_test),
               shuffle=True)
 
@@ -273,6 +277,8 @@ plt.ylabel('True positive rate')
 plt.title('ROC curve')
 plt.legend(loc='best')
 plt.show()
+
+
 
 model.save(settings.DNN_MODEL_PATH)
 print("[I]\tCNN model saved to", settings.DNN_MODEL_PATH)
