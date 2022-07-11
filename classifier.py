@@ -34,7 +34,9 @@ input_file.close()
 X = np.array(data)
 y = np.array(labels)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1776)
+X_train_tmp, X_test, y_train_tmp, y_test = train_test_split(X, y, test_size=0.2, random_state=1776)
+X_train, X_val ,y_train, y_val = train_test_split(X_train_tmp, y_train_tmp,test_size = 0.1, random_state=1776)
+
 
 print("\nTrainining samples:", y_train.size,
         "\nTesting samples:", y_test.size)
@@ -125,7 +127,7 @@ model.compile(optimizer='adam',loss='binary_crossentropy', metrics=['accuracy', 
 
 
 #We set a 10% Validation set
-X_train,X_val,y_train,y_val = train_test_split(np.array(data),np.array(labels),test_size = 0.1)
+#X_train,X_val,y_train,y_val = train_test_split(np.array(data),np.array(labels),test_size = 0.1)
 
 history = model.fit(X_train,y_train,
               batch_size=30,
