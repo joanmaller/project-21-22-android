@@ -106,31 +106,31 @@ from tensorflow.keras.optimizers.schedules import ExponentialDecay
 
 lr_schedule = ExponentialDecay(
         initial_learning_rate = 0.01,
-        decay_steps = 50,
-        decay_rate = 0.5)
+        decay_steps = 1000,
+        decay_rate = 0.1)
 
-opt = Adam(learning_rate=lr_schedule)
+#opt = Adam(learning_rate=lr_schedule)
 
 n_features = np.shape(data)[1]
 
 model = Sequential()
-model.add(Dense(n_features*0.5,  activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
-#model.add(Dropout(0.1))
-model.add(Dense(n_features/15, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
-#model.add(Dropout(0.1))
-model.add(Dense(n_features/150, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
-#model.add(Dropout(0.1))
+model.add(Dense(n_features/2,  activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
+model.add(Dropout(0.2))
+model.add(Dense(n_features/10, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
+model.add(Dropout(0.4))
+model.add(Dense(n_features/120, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
+model.add(Dropout(0.2))
 model.add(Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
-model.compile(optimizer=opt,loss='binary_crossentropy', metrics=['accuracy', 'AUC'])
+model.compile(optimizer='adam',loss='binary_crossentropy', metrics=['accuracy', 'AUC'])
 
 
 #We set a 10% Validation set
-#X_train,X_val,y_train,y_val = train_test_split(np.array(data),np.array(labels),test_size = 0.1)
+X_train,X_val,y_train,y_val = train_test_split(np.array(data),np.array(labels),test_size = 0.1)
 
 history = model.fit(X_train,y_train,
-              batch_size=50,
-              epochs=10,
-              validation_data=(X_test, y_test),
+              batch_size=30,
+              epochs=40,
+              validation_data=(X_val, y_val),
               shuffle=True)
 
 
@@ -173,10 +173,11 @@ plt.legend(loc="lower right")
 plt.show()
 
 scr = model.predict(X_test) # We extract the score for each class ...
-y_pred3 = np.rint(scr)     # ... and then we round it to the nearest integer
+#y_pred3 = scr.ravel()
+y_pred3 = np.rint(scr).ravel()     # ... and then we round it to the nearest integer
 acc3='CNN Accuracy: %.2f %%' % (accuracy_score(y_test, y_pred3)*100)
 print(acc3)
-score = model.evaluate(X_test, y_test, batch_size=50)
+score = model.evaluate(X_test, y_test, batch_size=30)
 print(score)
 cm_cnn = confusion_matrix(y_test, y_pred3)
 fpr_cnn, tpr_cnn, thresholds_cnn = roc_curve(y_test, y_pred3)
@@ -187,7 +188,7 @@ plt.plot([0, 1], [0, 1], 'k--')
 #plt.plot([0, 1], [0, 1], color="navy", lw=lw, linestyle="--")
 plt.plot(fpr_svm, tpr_svm, label='SVM (area = {:.3f})'.format(auc_svm))
 plt.plot(fpr_knn, tpr_knn, label='KNN (area = {:.3f})'.format(auc_knn))
-plt.plot(fpr_cnn, tpr_cnn, label='CNN (area = {:.3f})'.format(auc_cnn))
+plt.plot(fpr_cnn, tpr_cnn, label='DNN (area = {:.3f})'.format(auc_cnn))
 plt.xlabel('False positive rate')
 plt.ylabel('True positive rate')
 plt.title('ROC curve')
