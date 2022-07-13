@@ -16,6 +16,12 @@ from sklearn.svm import LinearSVC
 from secml.ml.classifiers import CClassifierSVM
 from secml.ml.kernels import CKernelLinear
 
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense , Dropout
+from tensorflow.keras import regularizers
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers.schedules import ExponentialDecay
+
 
 if not os.path.exists(settings.MODELS):
     os.mkdir(settings.MODELS)
@@ -23,11 +29,11 @@ if not os.path.exists(settings.MODELS):
 data = []
 labels = []
 
-input_file = open("data_X.json")
+input_file = open(settings.X_DATA)
 data = json.load(input_file)
 input_file.close()
 
-input_file = open("labels_y.json")
+input_file = open(settings.Y_LABELS)
 labels = json.load(input_file)
 input_file.close()
 
@@ -103,42 +109,39 @@ auc_knn = auc(fpr_knn, tpr_knn)
 
 
 #We try with Neural Network
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense , Dropout
-from tensorflow.keras import regularizers
-from tensorflow.keras.callbacks import ReduceLROnPlateau
-from tensorflow.keras.utils import plot_model
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.optimizers.schedules import ExponentialDecay
+batch_size = 10
 
 lr_schedule = ExponentialDecay(
         initial_learning_rate = 0.01,
-        decay_steps = 1000,
-        decay_rate = 0.1)
+        decay_steps = batch_size*50,
+        decay_rate = 0.3)
 
-#opt = Adam(learning_rate=lr_schedule)
+opt = Adam(learning_rate=lr_schedule)
+#reg = regularizers.l1_l2(l1=0.001, l2=0.001)
+reg = regularizers.L2(0.01)
+
 
 n_features = np.shape(data)[1]
 
+
 model = Sequential()
-model.add(Dense(n_features/2,  activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
-model.add(Dropout(0.2))
-model.add(Dense(n_features/10, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
-model.add(Dropout(0.4))
-model.add(Dense(n_features/120, activation='relu', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
-model.add(Dropout(0.2))
-model.add(Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l1_l2(l1=0.001, l2=0.001)))
-model.compile(optimizer='adam',loss='binary_crossentropy', metrics=['accuracy', 'AUC'])
+model.add(Dense(n_features,  activation='relu', kernel_regularizer=reg))
+#model.add(Dropout(0.1))
+model.add(Dense(n_features/5,  activation='relu', kernel_regularizer=reg))
+#model.add(Dropout(0.1))
+model.add(Dense(n_features/10, activation='relu', kernel_regularizer=reg))
+model.add(Dense(n_features/50, activation='relu', kernel_regularizer=reg))
+model.add(Dense(1, activation='sigmoid', kernel_regularizer=reg))
+model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy', 'AUC'])
 
 
 #We set a 10% Validation set
 #X_train,X_val,y_train,y_val = train_test_split(np.array(data),np.array(labels),test_size = 0.1)
 
 history = model.fit(X_train,y_train,
-              batch_size=30,
-              epochs=40,
-              validation_data=(X_val, y_val),
-              shuffle=True)
+              batch_size=batch_size,
+              epochs=10,
+              validation_data=(X_val, y_val))
 
 
 model.save(settings.DNN_MODEL_PATH)
