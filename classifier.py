@@ -34,12 +34,17 @@ input_file.close()
 X = np.array(data)
 y = np.array(labels)
 
-X_train_tmp, X_test, y_train_tmp, y_test = train_test_split(X, y, test_size=0.2, random_state=1776)
-X_train, X_val ,y_train, y_val = train_test_split(X_train_tmp, y_train_tmp,test_size = 0.1, random_state=1776)
+X_tmp, X_test, y_tmp, y_test = train_test_split(X, y, test_size=0.2, random_state=settings.RAND_STATE)
+X_train, X_val, y_train, y_val = train_test_split(X_tmp, y_tmp,test_size = 0.1, random_state=settings.RAND_STATE)
 
+joblib.dump(X_train, settings.X_TRAIN)
+joblib.dump(y_train, settings.Y_TRAIN)
+joblib.dump(X_test, settings.X_TEST)
+joblib.dump(y_test, settings.Y_TEST)
 
 print("\nTrainining samples:", y_train.size,
-        "\nTesting samples:", y_test.size)
+        "\nTesting samples:", y_test.size,
+        "\nValidation samples:", y_val.size)
 
 
 

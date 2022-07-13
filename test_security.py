@@ -19,22 +19,13 @@ from secml.ml.kernels import CKernelLinear
 from secml.adv.attacks.poisoning import CAttackPoisoningSVM
 
 
-data = []
-labels = []
+X_train = joblib.load(settings.X_TRAIN)
+X_test = joblib.load(settings.X_TEST)
+y_train = joblib.load(settings.Y_TRAIN)
+y_test = joblib.load(settings.Y_TEST)
 
-input_file = open("data_X.json")
-data = json.load(input_file)
-input_file.close()
 
-input_file = open("labels_y.json")
-labels = json.load(input_file)
-input_file.close()
-
-X = np.array(data)
-y = np.array(labels)
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1776)
-
+tr = CDataset(x=X_train, y=y_train)
 ts = CDataset(x=X_test, y=y_test)
 
 print("\nTrainining samples:", y_train.size,
@@ -44,6 +35,7 @@ print("\nTrainining samples:", y_train.size,
 
 secml_clf = joblib.load(settings.SECML_MODEL_PATH)
 
+'''
 params = {
     "classifier": secml_clf,
     "distance": 'l2',
@@ -54,8 +46,22 @@ params = {
     "y_target": 0,
     "solver_params": {'eta': 1, 'eta_min': 1, 'eta_max': None, 'eps': 1e-4}
 }
+'''
 
-evasion = CAttackEvasionPGDLS(**params)
+solver_params = {'eta': 1, 'eta_min': 1, 'eta_max': None, 'eps': 1e-4}
+
+#evasion = CAttackEvasionPGDLS(**params)
+evasion = CAttackEvasionPGDLS(
+        classifier=secml_clf,
+        distance='l2',
+        double_init=False,
+        lb=0,
+        ub=1,
+        attack_classes='all',
+        y_target=0,
+        solver_params=solver_params
+        )
+
 n_mal = 10
 
 # Attack DS
@@ -87,11 +93,6 @@ fig.sp.plot_sec_eval(sec_eval.sec_eval_data, marker='o',
 fig.show()
 
 # --- Try dataset poisoning ---
-
-
-tr = CDataset(x=X_train, y=y_train)
-solver_params = {'eta': 1, 'eta_min': 1, 'eta_max': None, 'eps': 1e-4}
-
 
 svm_poisoning = CAttackPoisoningSVM(
         classifier=secml_clf,
