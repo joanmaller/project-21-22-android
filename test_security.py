@@ -31,26 +31,13 @@ ts = CDataset(x=X_test, y=y_test)
 print("\nTrainining samples:", y_train.size,
         "\nTesting samples:", y_test.size)
 
-# --- try evaluation with secml ---
+
+# --- Evasion---
 
 secml_clf = joblib.load(settings.SECML_MODEL_PATH)
 
-'''
-params = {
-    "classifier": secml_clf,
-    "distance": 'l2',
-    "double_init": False,
-    "lb": 'x0',
-    "ub": 1,
-    "attack_classes": 'all',
-    "y_target": 0,
-    "solver_params": {'eta': 1, 'eta_min': 1, 'eta_max': None, 'eps': 1e-4}
-}
-'''
-
 solver_params = {'eta': 1, 'eta_min': 1, 'eta_max': None, 'eps': 1e-4}
 
-#evasion = CAttackEvasionPGDLS(**params)
 evasion = CAttackEvasionPGDLS(
         classifier=secml_clf,
         distance='l2',
@@ -62,7 +49,7 @@ evasion = CAttackEvasionPGDLS(
         solver_params=solver_params
         )
 
-n_mal = 10
+n_mal = 0.1*y_test.size
 
 # Attack DS
 mal_idx = ts.Y.find(ts.Y == 1)[:n_mal]
@@ -92,7 +79,7 @@ fig.sp.plot_sec_eval(sec_eval.sec_eval_data, marker='o',
 
 fig.show()
 
-# --- Try dataset poisoning ---
+# --- Dataset Poisoning ---
 
 svm_poisoning = CAttackPoisoningSVM(
         classifier=secml_clf,
@@ -108,13 +95,15 @@ svm_poisoning.x0 = tr[0,:].X #attacker's initial sample features
 svm_poisoning.xc = tr[0,:].X #attacker's sample features
 svm_poisoning.yc = tr[0,:].Y #attacker's sample label
 
-svm_poisoning.n_points = 150 #number of poisoned points
+svm_poisoning.n_points = 0.25*y_train.size #number of poisoned points
 
 print("[I]\tPoisoning training set...")
 pois_y_pred, pois_scores, _, _ = svm_poisoning.run(ts.X, ts.Y)
 print("[I]\tPoisoning completed.")
 pois_acc='Poisoned SVC Accuracy: %.2f %%' % (accuracy_score(y_test, pois_y_pred.get_data())*100)
 print(pois_acc)
+
+plt.rcParams.update({'font.size': 24})
 
 cm_pois = confusion_matrix(y_test, pois_y_pred.get_data())
 disp_cm_pois = ConfusionMatrixDisplay(confusion_matrix=cm_pois, display_labels=["goodware", "malware"])

@@ -54,8 +54,8 @@ print("\nTrainining samples:", y_train.size,
 
 
 
-clf = LinearSVC(C=0.1, loss='squared_hinge', max_iter=10000,
-          multi_class='ovr', penalty='l2', tol=0.00001, verbose=0)
+clf = LinearSVC(C=0.1, loss='squared_hinge',
+          multi_class='ovr', penalty='l2', verbose=0)
 clf.fit(X_train, y_train)
 
 joblib.dump(clf, settings.SVM_MODEL_PATH)
@@ -117,26 +117,18 @@ lr_schedule = ExponentialDecay(
         decay_rate = 0.3)
 
 opt = Adam(learning_rate=lr_schedule)
-#reg = regularizers.l1_l2(l1=0.001, l2=0.001)
-reg = regularizers.L2(0.01)
-
+reg = regularizers.l1_l2(l1=0.001, l2=0.001)
 
 n_features = np.shape(data)[1]
 
-
 model = Sequential()
 model.add(Dense(n_features,  activation='relu', kernel_regularizer=reg))
-#model.add(Dropout(0.1))
-model.add(Dense(n_features/5,  activation='relu', kernel_regularizer=reg))
-#model.add(Dropout(0.1))
-model.add(Dense(n_features/10, activation='relu', kernel_regularizer=reg))
-model.add(Dense(n_features/50, activation='relu', kernel_regularizer=reg))
+model.add(Dropout(0.1))
+model.add(Dense(n_features,  activation='relu', kernel_regularizer=reg))
+model.add(Dropout(0.1))
+model.add(Dense(n_features,  activation='relu', kernel_regularizer=reg))
 model.add(Dense(1, activation='sigmoid', kernel_regularizer=reg))
 model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy', 'AUC'])
-
-
-#We set a 10% Validation set
-#X_train,X_val,y_train,y_val = train_test_split(np.array(data),np.array(labels),test_size = 0.1)
 
 history = model.fit(X_train,y_train,
               batch_size=batch_size,
@@ -147,12 +139,6 @@ history = model.fit(X_train,y_train,
 model.save(settings.DNN_MODEL_PATH)
 print("[I]\tCNN model saved to", settings.DNN_MODEL_PATH)
 
-
-#plot CNN model
-#model.summary() # check what's the issue 
-#plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)  #test if the new import is working
-#img = cv2.imread('model_plot_png')
-#cv2.imshow(img)
 
 #Plot Accuracy history
 plt.plot(history.history['accuracy'])
@@ -206,6 +192,7 @@ plt.legend(loc='best')
 plt.show()
 
 
+plt.rcParams.update({'font.size': 24})
 
 disp_cm_svm = ConfusionMatrixDisplay(confusion_matrix=cm_svm, display_labels=["goodware", "malware"])
 disp_cm_svm.plot()

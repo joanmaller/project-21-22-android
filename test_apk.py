@@ -16,10 +16,8 @@ def text_pred(num):
     return "malware" if num == 1 else "goodware"
 
 
-#settings.KNOWN_FEATURES = "known_features.json"
 
 #usage: python analyze_apk.py path_to_apk
-
 if len(sys.argv) != 2 or not sys.argv[1].endswith("apk"):
     print("[E]\tUsage: python",sys.argv[0],"path_to_apk")
     sys.exit()

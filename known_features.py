@@ -2,8 +2,6 @@ import os
 import json
 import settings
 
-#settings.RESULTS = "results/"
-#settings.KNOWN_FEATURES = "known_features.json"
 
 features_set = set()
 

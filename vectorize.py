@@ -3,9 +3,6 @@ import sys
 import json
 import settings
 
-#settings.RESULTS = "results/"
-#settings.KNOWN_FEATURES = "known_features.json"
-#filename = "data.json"
 
 known_features = set()
 
